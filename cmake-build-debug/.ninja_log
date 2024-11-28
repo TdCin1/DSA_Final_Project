@@ -1,7 +1,0 @@
-# ninja log v5
-3	1154	7542546845117694	CMakeFiles/Final_Repo.dir/src/main.cpp.obj	41f5685645ec58f6
-1155	1378	7542546847339722	Final_Repo.exe	a29651b7dc2a88cc
-4	851	7542480348501786	CMakeFiles/Final_Repo.dir/src/Graph.cpp.obj	4eb3c9c424ba9365
-1	174	7542549736952108	build.ninja	4e79db8fc57dbe81
-3	1142	7542549749303385	CMakeFiles/Final_Repo.dir/src/main.cpp.obj	41f5685645ec58f6
-1143	1324	7542549751115031	Final_Repo.exe	136b2862386d10dc
