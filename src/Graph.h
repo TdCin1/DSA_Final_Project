@@ -40,15 +40,21 @@ private:
     int size = 0;
 
 public:
-    // try to find node by value, if doesn't exist then add to graph
-    GraphNodePtr<T> findAdd(T value) {
+    GraphNodePtr<T> find(T value) {
         typename std::map<T, int>::iterator it = indices.find(value);
         if(it != indices.end()) return nodes[it->second];
+        return nullptr;
+    }
 
-        GraphNodePtr<T> ptr = std::make_shared<GraphNode<T>>(value);
-        nodes.push_back(ptr);
-        indices[value] = size++;
-        return ptr;
+    // try to find node by value, if doesn't exist then add to graph
+    GraphNodePtr<T> findAdd(T value) {
+        GraphNodePtr<T> node = find(value);
+        if(!node) {
+            node = std::make_shared<GraphNode<T>>(value);
+            nodes.push_back(node);
+            indices[value] = size++;
+        }
+        return node;
     }
 
     void connect(GraphNodePtr<T> from, GraphNodePtr<T> to) {

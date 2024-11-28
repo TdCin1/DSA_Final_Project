@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
-project(Final_Repo)
+project(project3)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Final_Repo src/main.cpp
-        src/csvHandler.h)
+add_executable(project3 src/main.cpp src/CSVHandler.cpp)

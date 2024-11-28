@@ -1,40 +1,35 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <string>
+#include "CSVHandler.h"
+
 #include <filesystem>
 #include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <vector>
 #include <cctype>
-#include<unordered_map>
-#include<unordered_set>
 
-using namespace std;
-
-
-bool isBlank(const string& line) {
-    return all_of(line.begin(), line.end(), [](unsigned char c) { return isspace(c); });
+static bool isBlank(const std::string& line) {
+    return std::all_of(line.begin(), line.end(), [](unsigned char c) { return isspace(c); });
 }
 
-void processCSV(const string& filePath, vector<string>& allData) {
-    //Open up the correct file with ifstream
-    ifstream file(filePath);
+static void processCSV(const std::string& filePath, std::vector<std::string>& allData) {
+    // Open up the correct file with ifstream
+    std::ifstream file(filePath);
 
-    //Error checking
+    // Error checking
     if (!file.is_open()) {
-        cerr << "Error: Could not open the file: " << filePath << endl;
+        std::cerr << "Error: Could not open the file: " << filePath << std::endl;
         return;
     }
 
-    //Adds all data into a 1d vector
-    string line;
+    // Adds all data into a 1d vector
+    std::string line;
     while (getline(file, line)) {
         if(!isBlank(line)) {
+            std::string row = "";
+            std::stringstream ss(line);
 
-            string row = "";
-            stringstream ss(line);
-
-            string field;
+            std::string field;
             while (getline(ss, field, ',')) {
                 row += field;
             }
@@ -46,31 +41,35 @@ void processCSV(const string& filePath, vector<string>& allData) {
     file.close();
 }
 
-unordered_map<string, unordered_set<string>> getDataMap(){
-    //Has the correct path for our data
-    string folderPath = "../Data/";
-    vector<string> allData;
+static void lowercase(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
+}
 
-    //Processes each csv in our data folder
+std::unordered_map<std::string, std::unordered_set<std::string>> getDataMap() {
+    // Has the correct path for our data
+    std::string folderPath = "../Data/";
+    std::vector<std::string> allData;
+
+    // Processes each csv in our data folder
     try {
         for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
             if (entry.is_regular_file() && entry.path().extension() == ".csv") {
-                cout << "Processing file: " << entry.path() << endl;
+                std::cout << "Processing file: " << entry.path() << std::endl;
                 processCSV(entry.path().string(), allData);
             }
         }
 
-    } catch (const exception& ex) {
-        cerr << "Error: " << ex.what() << endl;
+    } catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << std::endl;
     }
 
 
-    unordered_map<string, unordered_set<string>> dataMap;
+    std::unordered_map<std::string, std::unordered_set<std::string>> dataMap;
 
 
-    for(const auto& data : allData){
-        //Because of weird formatting must use this to find first letter in a string
-        size_t index = string::npos;
+    for (const auto& data : allData) {
+        // Because of weird formatting must use this to find first letter in a string
+        size_t index = std::string::npos;
         for (size_t i = 0; i < data.length(); ++i) {
             if (isalpha(data[i])) {
                 index = i;
@@ -79,36 +78,39 @@ unordered_map<string, unordered_set<string>> getDataMap(){
         }
 
         size_t openingParen = data.find('(');
-        string firstWord = data.substr(index, openingParen-1);
+        std::string firstWord = data.substr(index, openingParen-1);
 
-        //Trim extra spaces
+        // Trim extra spaces
         size_t end = firstWord.find_last_not_of(' ');
 
-        //Remove all characters after the last non-space character
-        if (end != string::npos) {
+        // Remove all characters after the last non-space character
+        if (end != std::string::npos) {
             firstWord.erase(end + 1);
         } else {
             // If the string is entirely made of spaces, clear it
             firstWord.clear();
         }
 
+        // Make lowercase
+        lowercase(firstWord);
+
         // Find the first opening parenthesis '('
-        if (openingParen != string::npos) {
+        if (openingParen != std::string::npos) {
             // Find the first closing parenthesis ')' after the opening parenthesis
             size_t closingParen = data.find(')', openingParen);
 
-            string afterParenthesis;
-            if (closingParen != string::npos && closingParen + 1 < data.length()) {
+            std::string afterParenthesis;
+            if (closingParen != std::string::npos && closingParen + 1 < data.length()) {
                 // Extract everything after the closing parenthesis
                 afterParenthesis = data.substr(closingParen + 1);
                 // Trim leading spaces (optional)
                 afterParenthesis.erase(0, afterParenthesis.find_first_not_of(' '));
             }
 
-            //Now all of our definition is in afterParenthesis
-            //We must separate each word and put it into a set
-            vector<string> words;
-            string currentWord;
+            // Now all of our definition is in afterParenthesis
+            // We must separate each word and put it into a set
+            std::vector<std::string> words;
+            std::string currentWord;
 
             for (char c : data) {
                 if (isalpha(c)) {
@@ -128,10 +130,11 @@ unordered_map<string, unordered_set<string>> getDataMap(){
                 words.push_back(currentWord);
             }
 
-            //Add all the data into the correct set
-            for(const auto& i : words){
-                dataMap[firstWord].insert(i);
-
+            // Add all the data into the correct set
+            for (std::string word : words){
+                // Make word lowercase before inserting
+                lowercase(word);
+                dataMap[firstWord].insert(word);
             }
         }
     }
