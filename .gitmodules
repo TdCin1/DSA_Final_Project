@@ -1,0 +1,3 @@
+[submodule "gen/wordset-dictionary"]
+	path = gen/wordset-dictionary
+	url = https://github.com/wordset/wordset-dictionary.git

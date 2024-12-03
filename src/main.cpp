@@ -1,55 +1,75 @@
-#include <unordered_set>
+#include <functional>
 #include <iostream>
+#include <fstream>
 #include <vector>
-#include <queue>
-#include <set>
+#include <chrono>
 
-#include "CSVHandler.h"
 #include "Graph.h"
 
-// could move to Graph.h
-template <typename T>
-std::vector<GraphNodePtr<T>> bfs(Graph<T>& graph, T from, T to) {
-    std::queue<std::vector<GraphNodePtr<T>>> q;
-    std::set<std::vector<GraphNodePtr<T>>> v;
+Graph<std::string, std::string> loadWordGraph(const std::string& file) {
+    Graph<std::string, std::string> graph;
+    std::ifstream ifs(file);
 
-    GraphNodePtr<T> f = graph.find(from);
-    GraphNodePtr<T> t = graph.find(to);
-    if(!f || !t) return {};
-    q.push({f});
+    std::string line;
+    while(std::getline(ifs, line)) {
+        std::string word(line.data());
 
-    while(!q.empty()) {
-        std::vector<GraphNodePtr<T>> path = q.front();
-        q.pop();
-
-        for(GraphNodePtr<T> conn: path[path.size() - 1]->getConnections()) {
-            std::vector<GraphNodePtr<T>> next(path);
-            next.push_back(conn);
-            if(v.count(next) > 0) continue;
-
-            if(conn == t) return next;
-            q.push(next);
-            v.insert(next);
+        std::vector<char> vec;
+        std::string def = std::string(&line.data()[word.length() + 1]);
+        for(size_t i = word.length() + 1; i < line.length(); ++i) {
+            char c = line[i];
+            if(c == '\0' || c == ' ') {
+                if(vec.size() == 0) continue;
+                graph.connect(word, std::string(vec.begin(), vec.end()), def);
+                vec.clear();
+                if(c == '\0') def = std::string(&line.data()[i + 1]);
+            } else if(c != '(' && c != ')' && c != ',' && c != '.' && c != '\\' && c != '"')
+                vec.push_back(std::tolower(c));
         }
     }
 
-    return {};
+    ifs.close();
+    return graph;
 }
 
-// TODO: alt shows up in graph, is an error of definition parsing
-int main() {
-    Graph<std::string> graph;
+void print_edges(const Graph<std::string, std::string>& graph, std::vector<GraphEdgeData<std::string>> edges) {
+    for(GraphEdgeData<std::string> edge: edges)
+        std::cout << graph.getNode(edge.from) << ": " << edge.data << std::endl;
+    if(edges.size() > 0) std::cout << graph.getNode(edges[edges.size() - 1].to) << std::endl;
+}
 
-    std::unordered_map<std::string, std::unordered_set<std::string>> data = getDataMap();
-    for(std::unordered_map<std::string, std::unordered_set<std::string>>::iterator it = data.begin();
-            it != data.end(); ++it) {
-        for(std::string word: it->second)
-            graph.connect(it->first, word);
+void test_bfs(const std::string& dict, const std::string& from, const std::string& to) {
+    Graph<std::string, std::string> graph = loadWordGraph(dict);
     }
 
-    // find path from dog to cat and print
-    for(GraphNodePtr<std::string> node: bfs<std::string>(graph, "dog", "cat"))
-        std::cout << node->getValue() << std::endl;
+void time_test(const std::string& name, std::function<void()> test) {
+    auto start = std::chrono::high_resolution_clock::now();
+    test();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    std::cout << name << " took " << duration.count() << " millis" << std::endl;
+}
+
+int main() {
+    Graph<std::string, std::string> graph;
+    time_test("loadWordGraph", [&](){
+        graph = loadWordGraph("../gen/opted.dict");
+        // graph = loadWordGraph("../gen/wordset.dict");
+    });
+
+    time_test("bfs", [&]() {
+        std::cout << std::endl << "BFS searching " << graph.getNodeCount() << " nodes, "
+                << graph.getEdgeCount() << " edges..." << std::endl << std::endl;
+        print_edges(graph, graph.bfs("dog", "red"));
+        std::cout << std::endl;
+    });
+
+    time_test("dfs", [&]() {
+        std::cout << std::endl << "DFS searching " << graph.getNodeCount() << " nodes, "
+                << graph.getEdgeCount() << " edges..." << std::endl << std::endl;
+        print_edges(graph, graph.dfs("dog", "red"));
+        std::cout << std::endl;
+    });
 
     return 0;
 }
