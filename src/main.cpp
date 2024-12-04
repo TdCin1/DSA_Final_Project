@@ -6,6 +6,12 @@
 
 #include "Graph.h"
 
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#include "TextureManager.h"
+
+Game *game = nullptr;
+
 // load graph of words connected to words used in their definition, weighted by the number of characters in that definition
 Graph<std::string, std::string> loadWordGraph(const std::string& file) {
     Graph<std::string, std::string> graph;
@@ -75,5 +81,17 @@ int main() {
         std::cout << std::endl;
     });
 
+    game = new Game();
+    game->init("Display",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,1200,1200,false);
+
+
+    while(game->running()) {
+
+        game->handleEvents();
+        game->update();
+        game->render();
+    }
+
     return 0;
 }
+
