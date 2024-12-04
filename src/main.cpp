@@ -6,6 +6,7 @@
 
 #include "Graph.h"
 
+// load graph of words connected to words used in their definition, weighted by the number of characters in that definition
 Graph<std::string, std::string> loadWordGraph(const std::string& file) {
     Graph<std::string, std::string> graph;
     std::ifstream ifs(file);
@@ -20,10 +21,10 @@ Graph<std::string, std::string> loadWordGraph(const std::string& file) {
             char c = line[i];
             if(c == '\0' || c == ' ') {
                 if(vec.size() == 0) continue;
-                graph.connect(word, std::string(vec.begin(), vec.end()), def);
+                graph.connect(word, std::string(vec.begin(), vec.end()), def.length(), def);
                 vec.clear();
                 if(c == '\0') def = std::string(&line.data()[i + 1]);
-            } else if(c != '(' && c != ')' && c != ',' && c != '.' && c != '\\' && c != '"')
+            } else if(c != '(' && c != ')' && c != ',' && c != '.' && c != ';' && c != '\\' && c != '"')
                 vec.push_back(std::tolower(c));
         }
     }
@@ -37,10 +38,6 @@ void print_edges(const Graph<std::string, std::string>& graph, std::vector<Graph
         std::cout << graph.getNode(edge.from) << ": " << edge.data << std::endl;
     if(edges.size() > 0) std::cout << graph.getNode(edges[edges.size() - 1].to) << std::endl;
 }
-
-void test_bfs(const std::string& dict, const std::string& from, const std::string& to) {
-    Graph<std::string, std::string> graph = loadWordGraph(dict);
-    }
 
 void time_test(const std::string& name, std::function<void()> test) {
     auto start = std::chrono::high_resolution_clock::now();
@@ -60,14 +57,21 @@ int main() {
     time_test("bfs", [&]() {
         std::cout << std::endl << "BFS searching " << graph.getNodeCount() << " nodes, "
                 << graph.getEdgeCount() << " edges..." << std::endl << std::endl;
-        print_edges(graph, graph.bfs("dog", "red"));
+        print_edges(graph, graph.bfs("dog", "approach"));
         std::cout << std::endl;
     });
 
     time_test("dfs", [&]() {
         std::cout << std::endl << "DFS searching " << graph.getNodeCount() << " nodes, "
                 << graph.getEdgeCount() << " edges..." << std::endl << std::endl;
-        print_edges(graph, graph.dfs("dog", "red"));
+        print_edges(graph, graph.dfs("dog", "approach"));
+        std::cout << std::endl;
+    });
+
+    time_test("dijkstras", [&]() {
+        std::cout << std::endl << "Dijkstras shortest path searching " << graph.getNodeCount() << " nodes, "
+                << graph.getEdgeCount() << " edges..." << std::endl << std::endl;
+        print_edges(graph, graph.path(graph.dijkstras("dog"), "approach"));
         std::cout << std::endl;
     });
 

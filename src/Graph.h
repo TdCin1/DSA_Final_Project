@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
@@ -16,12 +17,13 @@ template <typename R>
 struct GraphEdgeData {
     GraphNode from;
     GraphNode to;
+    int weight;
     R data;
 };
 
 // T is node data, R is graph edge data
 template <typename T, typename R>
-class Graph {
+class Graph { // weighted directed graph with edge and node data
     private:
         std::vector<std::unordered_set<GraphEdge>> adj; // each node has a vector of edges represented as indices
         std::unordered_map<T, GraphNode> indices; // map of node by value to index
@@ -57,15 +59,19 @@ class Graph {
             return edges[edge];
         }
 
-        void connect(GraphNode from, GraphNode to, R data) {
-            edges.push_back({from, to, data});
+        std::unordered_set<GraphEdge> getEdges(GraphNode node) const {
+            return adj[node];
+        }
+
+        void connect(GraphNode from, GraphNode to, int weight, R data) {
+            edges.push_back({from, to, weight, data});
             adj[from].insert(edgeCount++);
         }
 
-        void connect(T from, T to, R data) {
+        void connect(T from, T to, int weight, R data) {
             GraphNode f = findAdd(from);
             GraphNode t = findAdd(to);
-            return connect(f, t, data);
+            return connect(f, t, weight, data);
         }
 
         // returns empty vector when node not found
@@ -88,16 +94,7 @@ class Graph {
                     q.push(edge.to);
                     p[edge.to] = e;
 
-                    if(edge.to == to) { // backtrack the path and return
-                        std::vector<GraphEdgeData<R>> path;
-                        while(e != -1) {
-                            GraphEdgeData<R> edge = edges[e];
-                            path.push_back(edge);
-                            e = p[edge.from];
-                        }
-                        std::reverse(path.begin(), path.end());
-                        return path;
-                    }
+                    if(edge.to == to) return path(p, to);
                 }
             }
             return {};
@@ -129,16 +126,7 @@ class Graph {
                     s.push(edge.to);
                     p[edge.to] = e;
 
-                    if(edge.to == to) { // backtrack the path and return
-                        std::vector<GraphEdgeData<R>> path;
-                        while(e != -1) {
-                            GraphEdgeData<R> edge = edges[e];
-                            path.push_back(edge);
-                            e = p[edge.from];
-                        }
-                        std::reverse(path.begin(), path.end());
-                        return path;
-                    }
+                    if(edge.to == to) return path(p, to);
                 }
             }
             return {};
@@ -149,6 +137,55 @@ class Graph {
             GraphNode t = find(to);
             if(f == -1 || t == -1) return {};
             return dfs(f, t);
+        }
+
+        std::vector<GraphEdge> dijkstras(GraphNode from) {
+            std::priority_queue<std::pair<int, GraphNode>, std::vector<std::pair<int, GraphNode>>,
+                    std::greater<std::pair<int, GraphNode>>> pq;
+            std::vector<GraphEdge> p(nodeCount, -1);
+            std::vector<int> d(nodeCount, INT_MAX);
+
+            pq.push({0, from});
+            d[from] = 0;
+
+            while(!pq.empty()) {
+                GraphNode curr = pq.top().second;
+                pq.pop();
+
+                for(GraphEdge e: adj[curr]) {
+                    GraphEdgeData<R> edge = getEdgeData(e);
+                    if(d[edge.to] > d[curr] + edge.weight) {
+                        d[edge.to] = d[curr] + edge.weight;
+                        p[edge.to] = e;
+                        pq.push({d[edge.to], edge.to});
+                    }
+                }
+            }
+
+            return p;
+        }
+
+        std::vector<GraphEdge> dijkstras(T from) {
+            GraphNode f = find(from);
+            if(f == -1) return {};
+            return dijkstras(f);
+        }
+
+        std::vector<GraphEdgeData<R>> path(std::vector<GraphEdge> p, GraphNode to) {
+            std::vector<GraphEdgeData<R>> path;
+            for(GraphEdge e = p[to]; e != -1;) {
+                GraphEdgeData<R> edge = getEdgeData(e);
+                path.push_back(edge);
+                e = p[edge.from];
+            }
+            std::reverse(path.begin(), path.end());
+            return path;
+        }
+
+        std::vector<GraphEdgeData<R>> path(std::vector<GraphEdge> p, T to) {
+            GraphNode t = find(to);
+            if(t == -1) return {};
+            return path(p, t);
         }
 
         int getNodeCount() const {
