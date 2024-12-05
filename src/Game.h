@@ -1,22 +1,23 @@
-#ifndef RWORLD_GAME_H
-#define RWORLD_GAME_H
+#pragma once
+
 #include <SDL.h>
-#include <iostream>
-#include<SDL_image.h>
-#include<SDL_ttf.h>
-#include <algorithm>
-#include<vector>
+#include <SDL_ttf.h>
+#include <SDL_image.h>
 #include <unordered_set>
 #include <unordered_map>
-#include <set>
-#include<cmath>
+#include <algorithm>
+#include <iostream>
+#include <vector>
 #include <cctype>
+#include <cmath>
+#include <set>
+
 #include "Searching.h"
 
 using namespace std;
+
 class Game {
 public:
-
     struct node{
             string name;
             vector<node*> outgoing;
@@ -101,8 +102,4 @@ private:
 
     int timeTaken;
     bool searchFound=false;
-
 };
-
-
-#endif //RWORLD_GAME_H

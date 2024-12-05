@@ -1,8 +1,8 @@
 #include "Game.h"
+
 #include "TextureManager.h"
 
 using namespace std;
-
 
 void Game::init(const char *title, int x, int y, int width, int height, bool fullscreen) {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
