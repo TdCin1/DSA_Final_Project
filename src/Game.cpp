@@ -5,12 +5,11 @@ using namespace std;
 
 
 void Game::init(const char *title, int x, int y, int width, int height, bool fullscreen) {
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     timeTaken=0;
     //set Graph
-    time_test("loadWordGraph", [&](){
-        graph = loadWordGraph("../gen/opted.dict");
-    });
+    graph = loadWordGraph("../gen/opted.dict");
 
     //set our class vars h and w
     windowHeight = height;
@@ -127,13 +126,13 @@ void Game::handleEvents() {
                 //Set list to what is selected
                 vector<GraphEdgeData<string>> bfs_list;
                 if(selectOne){
-                    timeTaken = time_test("bfs", [&]() {
+                    timeTaken = recordTimeMillis([&]() {
                         bfs_list  = graph.bfs(strOneLower,stTwoLower);
                     });
                 }
                 else{
                     bfs_list  = graph.dfs(strOneLower,stTwoLower);
-                    timeTaken = time_test("dfs", [&]() {
+                    timeTaken = recordTimeMillis([&]() {
                         bfs_list  = graph.dfs(strOneLower,stTwoLower);
                     });
                 }
